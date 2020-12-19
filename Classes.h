@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <cstdio>
 using namespace std;
 
 enum FileType{BIN, TXT, CSV};
@@ -86,9 +87,9 @@ public:
 		getline(File, line);
 		int i = stoi(line);
 		this->noLines=i;
+		lines = new string[100];
 		lines[0] = line;
 		i = 1;
-		lines = new string[100];
 		while (File.eof() == false)
 		{
 			getline(File, line);
@@ -424,7 +425,8 @@ void operator <<(ostream& out, Command command) {
 //THE COMMANDS
 
 //1. DROP
-//MERGE PENTRU TOATE EXEMPLELE
+//MERGE PENTRU TOATE EXEMPLELE DE SINTAXA
+//FACE CE TREBUIE IN BAZA DE DATE
 class DropCommand
 {
 	Command command;
@@ -432,9 +434,10 @@ class DropCommand
 	UsefulFunctions function;
 	File theDatabase;
 public:
-	DropCommand(Command command, File theDatabase)
+	DropCommand(Command command, File &theDatabase)
 	{
 		checkDrop(command.getName());
+		this->theDatabase = theDatabase;
 		doDrop(command.getName());
 	}
 private:
@@ -448,20 +451,57 @@ private:
 		else
 		{
 			this->tableName = commandName;
-			cout << "The command is correct. We are now executing it: ";
+			cout << "The command is correct and we are now executing it: " << endl;;
 		}
 	}
 
 	void doDrop(string tableName)
 	{
-		int pozitionInFile = theDatabase.searchFile(tableName.c_str());
+		tableName = function.subStringWithoutSpaces(tableName);
+		cout << "The table you want to drop is: " << tableName << endl;
+		int pozitionInFile = this->theDatabase.searchFile(tableName.c_str());
 		if (pozitionInFile==-1)
 		{
 			throw new InvalidCommandException("There is no tabel with this name to be dropped!", 0);
 		}
 		else
 		{
+			cout << endl << "BEFORE the command the database has the following tables: " << endl;
+			for (int i = 1; i < theDatabase.getNoLines(); i++)
+			{
+				cout << theDatabase.getTheLine(i) << endl;
+			}
 			theDatabase.deleteTable(pozitionInFile);
+			cout << endl<<"AFTER the command the database has the following tables: " << endl<<endl;
+			for (int i = 1; i < theDatabase.getNoLines(); i++)
+			{
+				cout << theDatabase.getTheLine(i) << endl;
+			}
+
+			//removing the actual file
+			string fileName = tableName + ".bin";
+			remove(fileName.c_str());
+			cout <<endl<< "Congrats! Your file <<" << fileName << ">> has been removed and the table <<" << tableName << ">> is no longer in the database!"<<endl;
+			cout << theDatabase.getNoLines() << endl << endl;
+			createTheNewDatabase();
+		}
+	}
+	void createTheNewDatabase()
+	{
+		fstream theNewDatabase;
+		theNewDatabase.open("Database.txt", ios::out | ios::trunc |ios::in);
+		int i = 0; 
+		while (i < theDatabase.getNoLines())
+		{
+			theNewDatabase << this->theDatabase.getTheLine(i)<<endl;
+			i++;
+		}
+
+		while (theNewDatabase.eof() == false)
+		{
+			string line;
+			getline(theNewDatabase, line);
+			cout << line << endl;
 		}
 	}
 };
@@ -473,10 +513,10 @@ class DisplayCommand
 	Command command;
 	string table_name = " ";
 	UsefulFunctions function;
-	fstream theDatabase;
+	File theDatabase;
 public:
 
-	DisplayCommand(Command command, fstream &theDatabase)
+	DisplayCommand(Command command, File& theDatabase)
 	{
 		checkDisplay(command.getName());
 	}
@@ -1016,7 +1056,7 @@ class Parser
 	File theDatabase;
 public:
 
-	Parser(Command command, File theDatabase)
+	Parser(Command command, File &theDatabase)
 	{
 		this->FirstWord = command.getFirstWord();
 		this->SecondWord = command.getSecondWord();
