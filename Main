@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <cstdio>
 #include "Classes.h";
 using namespace std;
 
@@ -22,22 +23,24 @@ int main(int argc, char* argv[])
 	theCommandsFile.open(argv[1], ios::in);
 	File theCommands(argv[1]);
 	theCommands.setContent(theCommandsFile);
+	theCommandsFile.close();
 
 	ifstream theDatabaseFile;
 	theDatabaseFile.open(argv[2], ios::in);
 	File theDatabase(argv[2]);
 	theDatabase.setContent(theDatabaseFile);
+	theDatabaseFile.close();
 
 	Command command;
 	string theCommand = "";
 	int noOfCommands = theCommands.getNoLines();
-	int i = 0;
+	int i = 1;
 
 	while (noOfCommands != 0)
 	{
 		theCommand = theCommands.getTheLine(i);
-		cout << "The command to execute is: " << theCommand << endl;
 		command.setName(theCommand);
+		cout << "The command to execute is: " << command.getFirstWord()<<" "<<command.getSecondWord()<< endl;
 		Parser parsing(command, theDatabase);
 		parsing.Parse(command);
 		noOfCommands--;
