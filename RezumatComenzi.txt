@@ -1,6 +1,11 @@
-- aici avem toate clasele si functiile din fiecare, ca sa ni le organizam mai bine si sa gasim mai usor ce cautam
-- de fiecare data cand adaugati o clasa/functie PLIZ scrieti si header-ul in fisier, la locul potrivit, ca sa pastram coerenta
-- Pwp
+1. File
+	- Constructori:
+		- File(string NameOfFile)
+	- Copy Constructor:
+		- File(File& oldFile)
+	- int getNoLines()
+	- void setContent(ifstream &File)
+	- int searchFile(char numeTabel[])
 
 1. Exceptie
 
@@ -14,6 +19,7 @@
 	- string stringWithoutCommasOrSpaces (string str)
 	- static void writeStringToBin(ofstream& binFile, string str)
 	- static void readStringFromBin(ifstream& binFile, string str)
+	- bool isTabelInFile(ifstream& textFile, string tableName)
 
 3. Command:
 	- void setWords(string& name, string& commandFirst, string& commandSecond)
