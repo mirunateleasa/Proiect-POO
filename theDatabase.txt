@@ -1,8 +1,8 @@
 7
 studenti
 elevi
+mere
+pere
+inpanere
 profesori
-oameni
-animale
-etc
-etc
+examene
