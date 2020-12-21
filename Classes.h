@@ -55,11 +55,43 @@ public:
 		return this->noLines;
 	}
 
-	void deleteTable(int i)
+	void operator-(int i)
 	{
-		for (int j = i; j < this->noLines; j++)
-			lines[j] = lines[j + 1];
+		int noTables = stoi(this->lines[0]) - 2;
+		string* result=new string [noTables+1];
+		result[0] = to_string(noTables + 1);
+		int j = 1, k = 1;
+		while (j <= noTables+1)
+		{
+			if (j != i)
+			{
+				result[k] = lines[j];
+				k++;
+			}
+			j++;
+		}
+		delete[]lines;
+		lines = new string[noTables + 1];
+		lines = result;
 		this->noLines--;
+		cout << noLines;
+	}
+
+	void operator+(string tableName)
+	{
+		int noTables = stoi(this->lines[0]) - 1;
+		string* result = new string[noTables + 2];
+		result[0] = to_string(noTables + 2);
+		int j = 1;
+		for (int i = 1; i <=noTables; i++)
+		{
+			result[i] = lines[i];
+		}
+		result[noTables + 1] = tableName;
+		delete[]this->lines;
+		this->lines = new string[noTables + 2];
+		this->lines = result;
+		this->noLines++;
 	}
 
 	string getTheLine(int i)
@@ -198,10 +230,10 @@ public:
 	}
 
 
-	static void readStringFromBin(ifstream& binFile, string str)
+	static void readStringFromBin(ifstream& binFile, string &str)
 	{
 		int dim=0;
-		binFile.read((char*)dim, sizeof(int));
+		binFile.read((char*)&dim, sizeof(int));
 		char buffer[1000];
 		binFile.read(buffer, dim * sizeof(char));
 		str = (string)buffer;
@@ -273,6 +305,12 @@ public:
 
 	}
 
+	void operator =(ColumnAttribute &newAttribute)
+	{
+		this->type = newAttribute.type;
+		this->value = newAttribute.value;
+	}
+
 	void writeAttirbuteToBin(ofstream& File)
 	{
 		//write the value (string)
@@ -319,21 +357,48 @@ public:
 			this->type = STRING;
 		}
 	}
+	friend void operator <<(ostream& out, ColumnAttribute &attribute);
 };
+
+void operator <<(ostream& out, ColumnAttribute &attribute)
+{
+	out << "Attribute value: "<<attribute.value;
+	out << " which is of type " <<attribute.type;
+}
+
+
 
 class TableColumn {
 	char columnName[100] = "";
-	string columnType = "";
+	AttributeType columnType=INTEGER;
 	int dimension = 0;
 	string defaultValue = "";
 	int noAttributes = 0;
 	ColumnAttribute* attributes = nullptr;
-
+	UsefulFunctions function;
 public:
 	TableColumn(const char* name, string type, int dimension, string defValue, int NoAttributes) {
 		strcpy_s(this->columnName, 100, name);
 		this->columnName[99] = '\0';
-		this->columnType = type;
+		if (this->defaultValue.find(function.NUMBERS) != string::npos)
+		{
+			//means the attribute is a number. finding what type of number:
+			if (this->defaultValue.find(",") != string::npos || this->defaultValue.find(".") != string::npos)
+			{
+				//means it's float
+				this->columnType = FLOAT;
+			}
+			else
+			{
+				//means it's an integer
+				this->columnType = INTEGER;
+			}
+		}
+		else
+		{
+			//means it's a string
+			this->columnType = STRING;
+		}
 		this->dimension = dimension;
 		this->defaultValue = defValue;
 		//VALI: am adaugat nr de atribute pt ca nu putem sa avem un vector in binar fara sa stim exact dimensiunea (sau cel putin asa a zis Boja)
@@ -354,29 +419,30 @@ public:
 		strcpy_s(this->columnName, 100, newColumn.columnName);
 		this->columnName[99] = '\0';
 		this->defaultValue = newColumn.defaultValue;
+		this->columnType = newColumn.columnType;
 		this->attributes = new ColumnAttribute[newColumn.dimension];
 		for (int i = 0; i < newColumn.dimension; i++) {
 			this->attributes[i] = newColumn.attributes[i];
 		}
 		this->dimension = newColumn.dimension;
 	}
-	void operator=(const TableColumn& newColumn) {
+	void operator=(TableColumn& newColumn) {
 		if (this != &newColumn) {
 			if (this->attributes) {
 				delete[] this->attributes;
 			}
-			strcpy_s(this->columnName, 100, newColumn.columnName);
-			this->columnName[99] = '\0';
+			strcpy(this->columnName, newColumn.columnName);
 			this->defaultValue = newColumn.defaultValue;
-			this->attributes = new ColumnAttribute[newColumn.dimension];
-			for (int i = 0; i < newColumn.dimension; i++) {
+			this->attributes = new ColumnAttribute[newColumn.noAttributes];
+			this->columnType = newColumn.columnType;
+			for (int i = 0; i < newColumn.noAttributes; i++) {
 				this->attributes[i] = newColumn.attributes[i];
 			}
 			this->dimension = newColumn.dimension;
 		}
 	}
 
-	void operator<<(ColumnAttribute attribute) {
+	void operator+(ColumnAttribute attribute) {
 		ColumnAttribute* newAttributes = new ColumnAttribute[this->dimension + 1];
 		for (int i = 0; i < this->dimension; i++) {
 			newAttributes[i] = this->attributes[i];
@@ -390,45 +456,69 @@ public:
 	}
 
 	void operator+=(ColumnAttribute column) {
-		*this << column;
+		*this + column;
 	}
 
 	void writeColumnToBin(ofstream& File)
 	{
 		//write the name(char):
-		File.write(this->columnName, sizeof(TableColumn::columnName) * sizeof(char));
-
+		File.write((char*)&this->columnName,sizeof(char)*sizeof(TableColumn::columnName));
 		//write the columnType (aici o sa fac dupa ce rezolvi tu Vali cu constructorul in functie de tipul atributului (vezi mai sus))
+		if (this->columnType == FLOAT)
+		{
+			function.writeStringToBin(File, "FLOAT");
+		}
+		if (this->columnType == INTEGER)
+		{
+			function.writeStringToBin(File, "INTEGER");
+		}
+		if (this->columnType == STRING)
+		{
+			function.writeStringToBin(File, "STRING");
+		}
 
 		//write the dimension(int):
-		File.write((char*)this->dimension, sizeof(int));
+		File.write((char*)&this->dimension, sizeof(int));
 
 		//write the default value (string):
 		UsefulFunctions::writeStringToBin(File, this->defaultValue);
 
 		//write the array of attributes (the pointer to it):
-		File.write((char*)this->noAttributes, sizeof(int));
-		for (int i = 0; i < noAttributes; i++)
+		File.write((char*)&this->noAttributes, sizeof(int));
+		for (int i = 0; i < this->noAttributes; i++)
 		{
 			attributes[i].writeAttirbuteToBin(File);
 		}
 	}
 
-	void readColumnFromBin(ifstream& File)
+	void readColumnFromBin(ifstream &File)
 	{
 		//read the name(char):
-		File.read(this->columnName, sizeof(TableColumn::columnName) * sizeof(char));
-
+		File.read((char*)&this->columnName, sizeof(TableColumn::columnName)*sizeof(char));
 		//read the columnType (aici o sa fac dupa ce rezolvi tu Vali cu constructorul in functie de tipul atributului (vezi mai sus))
-
-		//write the dimension(int):
-		File.read((char*)this->dimension, sizeof(int));
+		string buffer;
+		function.readStringFromBin(File, buffer);
+		if (buffer == "FLOAT")
+		{
+			this->columnType = FLOAT;
+		}
+		if (buffer == "INTEGER")
+		{
+			this->columnType = INTEGER;
+		}
+		if (buffer == "STRING")
+		{
+			this->columnType = STRING;
+		}
+		//read the dimension(int):
+		File.read((char*)&this->dimension, sizeof(int));
 
 		//write the default value (string):
 		UsefulFunctions::readStringFromBin(File, this->defaultValue);
 
-		//write the array of attributes (the pointer to it):
-		File.read((char*)this->noAttributes, sizeof(int));
+
+		//read the array of attributes (the pointer to it):
+		File.read((char*)&this->noAttributes, sizeof(int));
 		for (int i = 0; i < noAttributes; i++)
 		{
 			attributes[i].readAttributeFromBin(File);
@@ -441,8 +531,68 @@ public:
 		strcpy(this->columnName, Name.c_str());
 	}
 
+	void setType(string type)
+	{
+		if (type=="integer")
+			this->columnType = INTEGER;
+		if (type == "text")
+			this->columnType = STRING;
+		if (type == "float")
+			this->columnType = FLOAT;
+	}
+
+	void setDim(int dim)
+	{
+		this->dimension = dim;
+	}
+
+	void setDefault(string def)
+	{
+		this->defaultValue = def;
+	}
+
+	string getName()
+	{
+		return this->columnName;
+	}
+
+	AttributeType getType()
+	{
+		return this->columnType;
+	}
+
+	int getDim()
+	{
+		return this->dimension;
+	}
+
+	string getDefault()
+	{
+		return this->defaultValue;
+	}
+
 	friend class Table;
+	friend void operator <<(ostream& out, TableColumn& column);
 };
+
+void operator <<(ostream& out, TableColumn &column)
+{
+	out <<endl<< "Name: ";
+	for (int i=0; i<strlen(column.columnName); i++)
+		out<<column.columnName[i];
+	out << endl<<"Type: " << column.columnType;
+	out << endl << "Dimension: " << column.dimension;
+	out << endl << "Default Value: " << column.defaultValue;
+	out << endl << "No of attributes: " << column.noAttributes;
+	if (column.noAttributes > 0)
+	{
+		out << endl << "The attributes: ";
+		for (int i = 0; i < column.noAttributes; i++)
+		{
+			out << column.attributes[i];
+		}
+	}
+}
 
 
 class Table {
@@ -457,7 +607,7 @@ public:
 	}
 	Table()
 	{
-
+		
 	}
 
 	~Table() {
@@ -465,14 +615,24 @@ public:
 			delete[] columns;
 	}
 
+	void setColumns(TableColumn* columns, int noColumns)
+	{
+		if (this->columns)
+		{
+			delete[]this->columns;
+		}
+		this->columns = new TableColumn[noColumns];
+		for (int i = 0; i < noColumns; i++)
+		{
+			this->columns[i] = columns[i];
+		}
+		this->noColumns = noColumns;
+	}
+
 	Table(const Table& table) {
 		strcpy_s(this->tableName, 100, table.tableName);
 		this->tableName[99] = '\0';
-		this->columns = new TableColumn[table.noColumns];
-		for (int i = 0; i < table.noColumns; i++) {
-			this->columns[i] = table.columns[i];
-		}
-		this->noColumns = table.noColumns;
+		this->setColumns(table.columns, table.noColumns);
 	}
 
 	void operator=(const Table& table) {
@@ -480,8 +640,7 @@ public:
 			if (this->columns) {
 				delete[] this->columns;
 			}
-			strcpy_s(this->tableName, 100, table.tableName);
-			this->tableName[99] = '\0';
+			strcpy(this->tableName, table.tableName);
 			this->columns = new TableColumn[table.noColumns];
 			for (int i = 0; i < table.noColumns; i++) {
 				this->columns[i] = table.columns[i];
@@ -489,36 +648,52 @@ public:
 			this->noColumns = table.noColumns;
 		}
 	}
-	void operator+(TableColumn column) {
-		TableColumn* newColumn = new TableColumn[this->noColumns + 1];
-		for (int i = 0; i < this->noColumns; i++) {
-			newColumn[i] = this->columns[i];
+	void operator <<(TableColumn &column)
+	{
+		TableColumn* newColumns = new TableColumn[this->noColumns + 1];
+		for (int i = 0; i < this->noColumns; i++)
+		{
+			newColumns[i] = this->columns[i];
 		}
-		newColumn[this->noColumns] = column;
-		this->noColumns += 1;
-		if (this->columns) {
-			delete[] this->columns;
-		}
-		this->columns = newColumn;
+		newColumns[this->noColumns] = column;
+		this->noColumns++;
+		if (this->columns)
+			delete[]this->columns;
+		this->columns = newColumns;
 	}
-	void operator+=(TableColumn column) {
-		*this + column;
+
+	void operator ()(TableColumn& column)
+	{
+		TableColumn* newColumns = new TableColumn[this->noColumns + 1];
+		for (int i = 0; i < this->noColumns; i++)
+		{
+			newColumns[i] = this->columns[i];
+		}
+		newColumns[this->noColumns] = column;
+		if (this->columns)
+			delete[]this->columns;
+		this->noColumns++;
+		this->columns = newColumns;
+	}
+	
+	void operator +=(TableColumn& column)
+	{
+		*this<<column;
 	}
 
 	void writeTableToBin(string tableName)
 	{
 		string fileName = tableName + ".bin";
-		ofstream File(fileName, ios::out | ios::binary | ios::trunc);
+		ofstream File (fileName, ios::out | ios::binary | ios::trunc);
 		if (File.is_open())
 		{
 			//write the table name (char):
-			File.write(this->tableName, sizeof(Table::tableName) * sizeof(char));
-
+			File.write((char*)&this->tableName,  sizeof(char)*sizeof(Table::tableName));
 			//write the columns:
-			File.write((char*)this->noColumns, sizeof(int));
+			File.write((char*)&this->noColumns, sizeof(int));
 			for (int i = 0; i < this->noColumns; i++)
 			{
-				columns[i].writeColumnToBin(File);
+				this->columns[i].writeColumnToBin(File);
 			}
 
 			File.close();
@@ -536,14 +711,14 @@ public:
 		File.open(fileName, ios::in | ios::binary);
 		if (File.is_open())
 		{
-			//write the table name (char):
-			File.read(this->tableName, sizeof(Table::tableName) * sizeof(char));
-
-			//write the columns:
-			File.read((char*)this->noColumns, sizeof(int));
+			//read the table name (char):
+			File.read((char*)&this->tableName, sizeof(Table::tableName) * sizeof(char));
+			//read the columns:
+			File.read((char*)&this->noColumns, sizeof(int));
+			this->columns = new TableColumn[noColumns];
 			for (int i = 0; i < this->noColumns; i++)
 			{
-				columns[i].readColumnFromBin(File);
+				this->columns[i].readColumnFromBin(File);
 			}
 
 			File.close();
@@ -555,7 +730,28 @@ public:
 	}
 
 	friend class CreateCommand;
+	friend void operator <<(ostream& out, Table &table);
 };
+
+
+void operator <<(ostream& out, Table &table)
+{
+	out << endl<<"-------------------------------------" << endl << "TABLE: ";
+	out << endl << "Name: ";
+	for (int i=0; i<strlen(table.tableName); i++)
+	{
+		out << table.tableName[i];
+	}
+	out << endl << "No of columns: " << table.noColumns;
+	if (table.noColumns > 0)
+	{
+		for (int i = 0; i < table.noColumns; i++)
+		{
+			out << endl<<endl<< "COLUMN " << i << ": ";
+			out << table.columns[i];
+		}
+	}
+}
 
 //Exceptions:
 class InvalidCommandException
@@ -805,7 +1001,7 @@ private:
 			{
 				cout << theDatabase.getTheLine(i) << endl;
 			}
-			theDatabase.deleteTable(pozitionInFile);
+			theDatabase-pozitionInFile;
 			cout << endl<<"AFTER the command the database has the following tables: " << endl<<endl;
 			for (int i = 1; i < theDatabase.getNoLines(); i++)
 			{
@@ -816,7 +1012,6 @@ private:
 			string fileName = tableName + ".bin";
 			remove(fileName.c_str());
 			cout <<endl<< "Congrats! Your file <<" << fileName << ">> has been removed and the table <<" << tableName << ">> is no longer in the database!"<<endl;
-			cout << theDatabase.getNoLines() << endl << endl;
 			createTheNewDatabase();
 		}
 	}
@@ -835,7 +1030,6 @@ private:
 		{
 			string line;
 			getline(theNewDatabase, line);
-			cout << line << endl;
 		}
 	}
 };
@@ -872,7 +1066,7 @@ private:
 	{
 		string tableName = commandName;
 		function.subStringWithoutSpaces(tableName);
-		cout << "The table you want to drop is: " << tableName << endl;
+		cout << "The table you want to display is: " << tableName << endl;
 		int pozitionInFile = this->theDatabase.searchFile(tableName.c_str());
 		if (pozitionInFile == -1)
 		{
@@ -880,12 +1074,15 @@ private:
 		}
 		else
 		{
+			cout << endl<<"Displaying the table..." << endl;
 			string fileName = tableName + ".bin";
 
 			Table theTable(tableName.c_str());
 
 			theTable.readTableFromBin(fileName);
-			//de facut dupa create
+			
+			cout << endl << "------------------------------------" << endl << "THE TABLE: " << endl;
+			cout << theTable;
 		}
 	}
 };
@@ -931,16 +1128,12 @@ private:
 				}
 				else {
 					cName = parametriiTabel;
-					cout << endl;
-					cout << endl << "** Primul parametrul este nume *" << cName << "* si este valid ";
 				}
 			}
 			//for the 2nd param we need a text but this time denoting one of the types, check type and pass it to the cType 
 			if (contorEditable == 1) {
 				if (parametriiTabel == "text" || parametriiTabel == "integer" || parametriiTabel == "float") {
 					cType = parametriiTabel;
-					cout << endl;
-					cout << endl << "** Parametrul al doilea este type*" << cType << "* si este valid ";
 				}
 				else {
 					throw new InvalidCommandException("Second parameter has an error", 0);
@@ -951,8 +1144,6 @@ private:
 			if (contorEditable == 2) {
 				if (function.checkAsciiValue(parametriiTabel, '0', '9') == 0) {
 					cDim = stoi(parametriiTabel);
-					cout << endl;
-					cout << endl << "** Parametrul al treilea este int*" << cDim << "* si este valid ";
 				}
 				else {
 					throw new InvalidCommandException("Wrong third parameter", 0);
@@ -964,8 +1155,6 @@ private:
 					parametriiTabel.erase(remove(parametriiTabel.begin(), parametriiTabel.end(), '’'), parametriiTabel.end());
 				}
 				defaultVal = parametriiTabel;
-				cout << endl;
-				cout << endl << "** Parametrul al 4 lea este default(string) *" << parametriiTabel << "* si este valid";
 			}
 			editable.erase(0, parametriiTabel.length() + 1);
 			contorEditable++;
@@ -1008,7 +1197,6 @@ private:
 		else {
 //aici cred ca ajungi cu copyEditable ca numele tabelului, asa ca:
 			strcpy(tabelCreat.tableName, copyEditable.c_str()); //am folosit c_str() ca sa transform string-ul (copyEditable) in char* (tableName). Gasesti functia pe google. 
-			
 			int counter;
 			newCommand.erase(0, editable.length());
 			if ((function.nrChars(newCommand, '(', counter) != function.nrChars(newCommand, ')', counter)) || ((function.nrChars(newCommand, '(', counter) + (function.nrChars(newCommand, ')', counter))) % 2 != 0)) {
@@ -1027,9 +1215,9 @@ private:
 					column.setType(type);
 					column.setDim(dim);
 					column.setDefault(value);
-
-//aici fac atribuirea coloanei nou create la tabel. Daca ai definit operatorul + corect, ar trebui sa mearga. 
-					tabelCreat+=column; 
+				
+//aici fac atribuirea coloanei nou create la tabel. Daca ai definit operatorul << corect, ar trebui sa mearga. 
+					tabelCreat += column;
 				}
 				else   // else we will strip the columns by the commas and spaces dividing them and then call the functions one by one while also deleting from the command string
 				{
@@ -1049,7 +1237,7 @@ private:
 						column.setType(type);
 						column.setDim(dim);
 						column.setDefault(value);
-//aici fac atribuirea coloanei nou create la tabel. Daca ai definit operatorul + corect, ar trebui sa mearga. 
+//aici fac atribuirea coloanei nou create la tabel. Daca ai definit operatorul << corect, ar trebui sa mearga.
 						tabelCreat += column;
 						newCommand.erase(0, parametriiTabel.length());
 					}
@@ -1062,17 +1250,27 @@ private:
 
 	void doCreate(string commandName)
 	{
-//aici, dupa ce faci setterii, cred ca ar trebui sa faci niste cout-uri la valorile din tabel ca sa vezi daca sunt ok, inainte sa faci scrierea in binar
-		//...
-		//...
 		this->tabelCreat.writeTableToBin(this->tabelCreat.tableName);
+		this->theDatabase+tabelCreat.tableName;
+		createTheNewDatabase();
+	}
+	
+	void createTheNewDatabase()
+	{
+		fstream theNewDatabase;
+		theNewDatabase.open("Database.txt", ios::out | ios::trunc | ios::in);
+		int i = 0;
+		while (i < theDatabase.getNoLines())
+		{
+			theNewDatabase << this->theDatabase.getTheLine(i) << endl;
+			i++;
+		}
 
-//dupa ce se face scrierea, facem si verificarea:
-		string fileName = tabelCreat.tableName;
-		fileName = fileName + ".bin";
-		Table tabelVerificare;
-		tabelVerificare.readTableFromBin(fileName);
-//acum, daca faci cout la valorile din tabelVerificare, ar trebui sa aiba valorile pe care le-am introdus.
+		while (theNewDatabase.eof() == false)
+		{
+			string line;
+			getline(theNewDatabase, line);
+		}
 	}
 };
 
@@ -1542,7 +1740,7 @@ public:
 	{
 		if (FirstWord == "CREATE")
 		{
-		//	CreateCommand object(command);
+			CreateCommand object(command, this->theDatabase);
 		}
 		if (FirstWord == "DROP")
 		{
