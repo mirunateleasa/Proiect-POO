@@ -434,6 +434,12 @@ public:
 			attributes[i].readAttributeFromBin(File);
 		}
 	}
+	
+	//setteri si getteri:
+	void setName(string Name)
+	{
+		strcpy(this->columnName, Name.c_str());
+	}
 
 	friend class Table;
 };
@@ -893,10 +899,11 @@ class CreateCommand
 	Command command;
 	UsefulFunctions function;
 	File theDatabase;
+	Table tabelCreat;
 public:
 	CreateCommand(Command command, File &theDatabase)
 	{
-		ValidareSerioasaCreate(command.getName());
+		ValidareSerioasaCreate(command.getName(), this->tabelCreat);
 		this->theDatabase = theDatabase;
 		doCreate(command.getName());
 	}
@@ -965,7 +972,7 @@ private:
 		}
 	}
 
-	void ValidareSerioasaCreate(string commanda) {// string& name, string& type, int& dim, string& value) {
+	void ValidareSerioasaCreate(string commanda, Table &tabelCreat) {// string& name, string& type, int& dim, string& value) {
 		string newCommand = commanda;
 		string editable;
 		string parametriiTabel;
@@ -984,18 +991,24 @@ private:
 			int noLettersTableName = 0;
 			noLettersTableName = copyEditable.find_first_of('I');
 			if (copyEditable.compare(copyEditable.find_first_of('I'), 11, "IFNOTEXISTS") == 0 && copyEditable.length() == (noLettersTableName + 11)) {
-				//here we should also check the str.substr(0,noLettersTable) with a table name to see if the table exists or not 
+//VALI: aici faci verificarea in Database.txt sa vezi daca apare sau nu tableName (te folosesti de functia isTableInFile din Useful
+				//(returneaza linia la care apare numele tabelului, daca e in txt sau -1 daca nu e in txt, ai exemplu in drop)
 				copyEditable = copyEditable.erase(copyEditable.find_first_of('I'), 11);
 				cout << endl << "We create new table " << copyEditable;
 			}
 			else
 				throw new InvalidCommandException("wrong if not exists", 0);
 		}
+
+		
 			
 		if (function.checkAsciiValue(copyEditable, 'a', 'z') != 0) {
 			throw new InvalidCommandException("Wrong table name", 0);
 		}
 		else {
+//aici cred ca ajungi cu copyEditable ca numele tabelului, asa ca:
+			strcpy(tabelCreat.tableName, copyEditable.c_str()); //am folosit c_str() ca sa transform string-ul (copyEditable) in char* (tableName). Gasesti functia pe google. 
+			
 			int counter;
 			newCommand.erase(0, editable.length());
 			if ((function.nrChars(newCommand, '(', counter) != function.nrChars(newCommand, ')', counter)) || ((function.nrChars(newCommand, '(', counter) + (function.nrChars(newCommand, ')', counter))) % 2 != 0)) {
@@ -1005,16 +1018,39 @@ private:
 			else {
 				if (function.nrChars(newCommand, '(', counter) == 1) {
 					createParamVandPars(newCommand, name, type, dim, value);
-					cout << "The command is correct. We are now executing it: !";
+//aici atribui primei coloane valorile (nu cred ca aveai nevoie sa verifici daca e doar o coloana sau mai multe, dar nu mai are sens sa stergem acum:
+					cout << "The command is correct. We are now executing it...";
+					tabelCreat.noColumns = 1;
+					TableColumn column;
+					column.setName(name);
+//VALI aici e nevoie de setteri pt toate valorile coloanei. Daca ai timp, defineste-i tu in clasa coloana, te rog, sau spune-i lui Radu ms
+					column.setType(type);
+					column.setDim(dim);
+					column.setDefault(value);
+
+//aici fac atribuirea coloanei nou create la tabel. Daca ai definit operatorul << corect, ar trebui sa mearga. 
+					tabelCreat<<column; 
 				}
 				else   // else we will strip the columns by the commas and spaces dividing them and then call the functions one by one while also deleting from the command string
 				{
+//aici o sa folosesc tabelCreate.noColumns pe post de contor, adica o sa inceapa de la 0 si o sa creasca de fiecare data cand gasesti o coloana noua:
+					tabelCreat.noColumns = 0;
 					newCommand = newCommand.substr(newCommand.find_first_of('(') + 1, newCommand.find_last_of(')') - 1);
 					newCommand = function.stringWithoutCommasOrSpaces(newCommand);
 					while (newCommand.length()) {
 
 						parametriiTabel = newCommand.substr(0, newCommand.find_first_of(')') + 1);
 						createParamVandPars(parametriiTabel, name, type, dim, value);
+//aici fac acelasi lucru ca mai sus, doar ca se va executa de mai multe ori. Nu e nevoie sa facem un vector de coloane pt ca nu vom avea nevoie de coloane in sine,
+						//sunt doar intermediare ca sa putem adauga la tabel:
+						TableColumn column;
+						column.setName(name);
+//VALI aici e nevoie de setteri pt toate valorile coloanei. Daca ai timp, defineste-i tu in clasa coloana, te rog, sau spune-i lui Radu ms
+						column.setType(type);
+						column.setDim(dim);
+						column.setDefault(value);
+//aici fac atribuirea coloanei nou create la tabel. Daca ai definit operatorul << corect, ar trebui sa mearga. 
+						tabelCreat << column;
 						newCommand.erase(0, parametriiTabel.length());
 					}
 					cout << endl << "The command is correct. We are now executing it: !";
@@ -1026,7 +1062,10 @@ private:
 
 	void doCreate(string commandName)
 	{
-
+//aici, dupa ce faci setterii, cred ca ar trebui sa faci niste cout-uri la valorile din tabel ca sa vezi daca sunt ok, inainte sa faci scrierea in binar
+		//...
+		//...
+		this->tabelCreat.writeTableToBin(this->tabelCreat.tableName);
 	}
 };
 
