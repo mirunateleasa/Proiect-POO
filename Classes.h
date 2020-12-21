@@ -55,7 +55,7 @@ public:
 		return this->noLines;
 	}
 
-	void operator-(int i)
+	File operator-(int i)
 	{
 		int noTables = stoi(this->lines[0]) - 2;
 		string* result=new string [noTables+1];
@@ -75,9 +75,10 @@ public:
 		lines = result;
 		this->noLines--;
 		cout << noLines;
+		return *this;
 	}
 
-	void operator+(string tableName)
+	File operator+(string tableName)
 	{
 		int noTables = stoi(this->lines[0]) - 1;
 		string* result = new string[noTables + 2];
@@ -88,10 +89,14 @@ public:
 			result[i] = lines[i];
 		}
 		result[noTables + 1] = tableName;
+		cout << result[0] << " " << result[noTables + 1];
 		delete[]this->lines;
-		this->lines = new string[noTables + 2];
-		this->lines = result;
 		this->noLines++;
+		this->lines = new string[noTables+3];
+		for (int i = 0; i < noTables + 2; i++)
+			lines[i] = result[i];
+		cout << endl<<this->lines[0] << " " << this->lines[1];
+		return *this;
 	}
 
 	string getTheLine(int i)
@@ -1163,14 +1168,14 @@ private:
 
 	void ValidareSerioasaCreate(string commanda, Table &tabelCreat) {// string& name, string& type, int& dim, string& value) {
 		string newCommand = commanda;
-		string editable;
-		string parametriiTabel;
-		string copyEditable;
+		string editable="";
+		string parametriiTabel="";
+		string copyEditable="";
 		// parametrii ce vor putea fi dati si de sus cand doriti 
-		string name;
-		string type;
-		int dim;
-		string value;
+		string name="";
+		string type="";
+		int dim=0;
+		string value="";
 		// next
 		// in order to check everything first we strip the table name until ( by any spaces in order to check it lexically 
 		editable = newCommand.substr(0, newCommand.find_first_of('('));
@@ -1250,8 +1255,10 @@ private:
 
 	void doCreate(string commandName)
 	{
+		cout << tabelCreat;
+		cout << endl;
 		this->tabelCreat.writeTableToBin(this->tabelCreat.tableName);
-		this->theDatabase+tabelCreat.tableName;
+		this->theDatabase=this->theDatabase+tabelCreat.tableName;
 		createTheNewDatabase();
 	}
 	
