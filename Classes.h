@@ -489,7 +489,7 @@ public:
 			this->noColumns = table.noColumns;
 		}
 	}
-	void operator<<(TableColumn column) {
+	void operator+(TableColumn column) {
 		TableColumn* newColumn = new TableColumn[this->noColumns + 1];
 		for (int i = 0; i < this->noColumns; i++) {
 			newColumn[i] = this->columns[i];
@@ -502,7 +502,7 @@ public:
 		this->columns = newColumn;
 	}
 	void operator+=(TableColumn column) {
-		*this << column;
+		*this + column;
 	}
 
 	void writeTableToBin(string tableName)
@@ -1028,8 +1028,8 @@ private:
 					column.setDim(dim);
 					column.setDefault(value);
 
-//aici fac atribuirea coloanei nou create la tabel. Daca ai definit operatorul << corect, ar trebui sa mearga. 
-					tabelCreat<<column; 
+//aici fac atribuirea coloanei nou create la tabel. Daca ai definit operatorul + corect, ar trebui sa mearga. 
+					tabelCreat+=column; 
 				}
 				else   // else we will strip the columns by the commas and spaces dividing them and then call the functions one by one while also deleting from the command string
 				{
@@ -1049,11 +1049,11 @@ private:
 						column.setType(type);
 						column.setDim(dim);
 						column.setDefault(value);
-//aici fac atribuirea coloanei nou create la tabel. Daca ai definit operatorul << corect, ar trebui sa mearga. 
-						tabelCreat << column;
+//aici fac atribuirea coloanei nou create la tabel. Daca ai definit operatorul + corect, ar trebui sa mearga. 
+						tabelCreat += column;
 						newCommand.erase(0, parametriiTabel.length());
 					}
-					cout << endl << "The command is correct. We are now executing it: !";
+					cout << endl << "The command is correct. We are now executing it...";
 				}
 			}
 
@@ -1066,6 +1066,13 @@ private:
 		//...
 		//...
 		this->tabelCreat.writeTableToBin(this->tabelCreat.tableName);
+
+//dupa ce se face scrierea, facem si verificarea:
+		string fileName = tabelCreat.tableName;
+		fileName = fileName + ".bin";
+		Table tabelVerificare;
+		tabelVerificare.readTableFromBin(fileName);
+//acum, daca faci cout la valorile din tabelVerificare, ar trebui sa aiba valorile pe care le-am introdus.
 	}
 };
 
