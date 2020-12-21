@@ -7,20 +7,20 @@
 #include <cstdio>
 using namespace std;
 
-enum FileType{BIN, TXT, CSV};
+enum FileType { BIN, TXT, CSV };
 
 class File
 {
 	string nameOfFile = "";
 	FileType type = TXT;
 	int noLines = 0;
-	string *lines;
+	string* lines;
 public:
 	File(string NameOfFile)
 	{
 		this->nameOfFile = NameOfFile;
-		int counter1 =0,  counter2 = 0;
-		if (this->nameOfFile.substr(this->nameOfFile.find_first_of('.'), 4)==".txt")
+		int counter1 = 0, counter2 = 0;
+		if (this->nameOfFile.substr(this->nameOfFile.find_first_of('.'), 4) == ".txt")
 		{
 			this->type = TXT;
 		}
@@ -34,7 +34,7 @@ public:
 		}
 	}
 
-	File ()
+	File()
 	{
 
 	}
@@ -55,13 +55,13 @@ public:
 		return this->noLines;
 	}
 
-	File operator-(int i)
+	void deleteTable(int i)
 	{
 		int noTables = stoi(this->lines[0]) - 2;
-		string* result=new string [noTables+1];
+		string* result = new string[noTables + 1];
 		result[0] = to_string(noTables + 1);
 		int j = 1, k = 1;
-		while (j <= noTables+1)
+		while (j <= noTables + 1)
 		{
 			if (j != i)
 			{
@@ -74,29 +74,24 @@ public:
 		lines = new string[noTables + 1];
 		lines = result;
 		this->noLines--;
-		cout << noLines;
-		return *this;
 	}
 
-	File operator+(string tableName)
+	void addTable(string tableName)
 	{
 		int noTables = stoi(this->lines[0]) - 1;
 		string* result = new string[noTables + 2];
 		result[0] = to_string(noTables + 2);
 		int j = 1;
-		for (int i = 1; i <=noTables; i++)
+		for (int i = 1; i <= noTables; i++)
 		{
 			result[i] = lines[i];
 		}
 		result[noTables + 1] = tableName;
-		cout << result[0] << " " << result[noTables + 1];
 		delete[]this->lines;
 		this->noLines++;
-		this->lines = new string[noTables+3];
+		this->lines = new string[noTables + 3];
 		for (int i = 0; i < noTables + 2; i++)
 			lines[i] = result[i];
-		cout << endl<<this->lines[0] << " " << this->lines[1];
-		return *this;
 	}
 
 	string getTheLine(int i)
@@ -106,7 +101,7 @@ public:
 
 	int searchFile(const char numeTabel[])
 	{
-		int i = 0; 
+		int i = 0;
 		for (i = 0; i < this->noLines; i++)
 		{
 			if (strcmp(lines[i].c_str(), numeTabel) == 0)
@@ -118,12 +113,12 @@ public:
 		return -1;
 	}
 
-	void setContent(ifstream &File)
+	void setContent(ifstream& File)
 	{
 		string line;
 		getline(File, line);
 		int i = stoi(line);
-		this->noLines=i;
+		this->noLines = i;
 		lines = new string[100];
 		lines[0] = line;
 		i = 1;
@@ -137,7 +132,7 @@ public:
 
 	void writeObjectAsFile(ofstream file)
 	{
-		
+
 	}
 };
 
@@ -235,9 +230,9 @@ public:
 	}
 
 
-	static void readStringFromBin(ifstream& binFile, string &str)
+	static void readStringFromBin(ifstream& binFile, string& str)
 	{
-		int dim=0;
+		int dim = 0;
 		binFile.read((char*)&dim, sizeof(int));
 		char buffer[1000];
 		binFile.read(buffer, dim * sizeof(char));
@@ -310,7 +305,7 @@ public:
 
 	}
 
-	void operator =(ColumnAttribute &newAttribute)
+	void operator =(ColumnAttribute& newAttribute)
 	{
 		this->type = newAttribute.type;
 		this->value = newAttribute.value;
@@ -362,20 +357,20 @@ public:
 			this->type = STRING;
 		}
 	}
-	friend void operator <<(ostream& out, ColumnAttribute &attribute);
+	friend void operator <<(ostream& out, ColumnAttribute& attribute);
 };
 
-void operator <<(ostream& out, ColumnAttribute &attribute)
+void operator <<(ostream& out, ColumnAttribute& attribute)
 {
-	out << "Attribute value: "<<attribute.value;
-	out << " which is of type " <<attribute.type;
+	out << "Attribute value: " << attribute.value;
+	out << " which is of type " << attribute.type;
 }
 
 
 
 class TableColumn {
 	char columnName[100] = "";
-	AttributeType columnType=INTEGER;
+	AttributeType columnType = INTEGER;
 	int dimension = 0;
 	string defaultValue = "";
 	int noAttributes = 0;
@@ -467,7 +462,7 @@ public:
 	void writeColumnToBin(ofstream& File)
 	{
 		//write the name(char):
-		File.write((char*)&this->columnName,sizeof(char)*sizeof(TableColumn::columnName));
+		File.write((char*)&this->columnName, sizeof(char) * sizeof(TableColumn::columnName));
 		//write the columnType (aici o sa fac dupa ce rezolvi tu Vali cu constructorul in functie de tipul atributului (vezi mai sus))
 		if (this->columnType == FLOAT)
 		{
@@ -496,10 +491,10 @@ public:
 		}
 	}
 
-	void readColumnFromBin(ifstream &File)
+	void readColumnFromBin(ifstream& File)
 	{
 		//read the name(char):
-		File.read((char*)&this->columnName, sizeof(TableColumn::columnName)*sizeof(char));
+		File.read((char*)&this->columnName, sizeof(TableColumn::columnName) * sizeof(char));
 		//read the columnType (aici o sa fac dupa ce rezolvi tu Vali cu constructorul in functie de tipul atributului (vezi mai sus))
 		string buffer;
 		function.readStringFromBin(File, buffer);
@@ -529,7 +524,7 @@ public:
 			attributes[i].readAttributeFromBin(File);
 		}
 	}
-	
+
 	//setteri si getteri:
 	void setName(string Name)
 	{
@@ -538,7 +533,7 @@ public:
 
 	void setType(string type)
 	{
-		if (type=="integer")
+		if (type == "integer")
 			this->columnType = INTEGER;
 		if (type == "text")
 			this->columnType = STRING;
@@ -580,12 +575,12 @@ public:
 	friend void operator <<(ostream& out, TableColumn& column);
 };
 
-void operator <<(ostream& out, TableColumn &column)
+void operator <<(ostream& out, TableColumn& column)
 {
-	out <<endl<< "Name: ";
-	for (int i=0; i<strlen(column.columnName); i++)
-		out<<column.columnName[i];
-	out << endl<<"Type: " << column.columnType;
+	out << endl << "Name: ";
+	for (int i = 0; i < strlen(column.columnName); i++)
+		out << column.columnName[i];
+	out << endl << "Type: " << column.columnType;
 	out << endl << "Dimension: " << column.dimension;
 	out << endl << "Default Value: " << column.defaultValue;
 	out << endl << "No of attributes: " << column.noAttributes;
@@ -612,7 +607,7 @@ public:
 	}
 	Table()
 	{
-		
+
 	}
 
 	~Table() {
@@ -653,7 +648,7 @@ public:
 			this->noColumns = table.noColumns;
 		}
 	}
-	void operator <<(TableColumn &column)
+	void operator <<(TableColumn& column)
 	{
 		TableColumn* newColumns = new TableColumn[this->noColumns + 1];
 		for (int i = 0; i < this->noColumns; i++)
@@ -680,20 +675,20 @@ public:
 		this->noColumns++;
 		this->columns = newColumns;
 	}
-	
+
 	void operator +=(TableColumn& column)
 	{
-		*this<<column;
+		*this << column;
 	}
 
 	void writeTableToBin(string tableName)
 	{
 		string fileName = tableName + ".bin";
-		ofstream File (fileName, ios::out | ios::binary | ios::trunc);
+		ofstream File(fileName, ios::out | ios::binary | ios::trunc);
 		if (File.is_open())
 		{
 			//write the table name (char):
-			File.write((char*)&this->tableName,  sizeof(char)*sizeof(Table::tableName));
+			File.write((char*)&this->tableName, sizeof(char) * sizeof(Table::tableName));
 			//write the columns:
 			File.write((char*)&this->noColumns, sizeof(int));
 			for (int i = 0; i < this->noColumns; i++)
@@ -735,15 +730,15 @@ public:
 	}
 
 	friend class CreateCommand;
-	friend void operator <<(ostream& out, Table &table);
+	friend void operator <<(ostream& out, Table& table);
 };
 
 
-void operator <<(ostream& out, Table &table)
+void operator <<(ostream& out, Table& table)
 {
-	out << endl<<"-------------------------------------" << endl << "TABLE: ";
+	out << endl << "-------------------------------------" << endl << "TABLE: ";
 	out << endl << "Name: ";
-	for (int i=0; i<strlen(table.tableName); i++)
+	for (int i = 0; i < strlen(table.tableName); i++)
 	{
 		out << table.tableName[i];
 	}
@@ -752,7 +747,7 @@ void operator <<(ostream& out, Table &table)
 	{
 		for (int i = 0; i < table.noColumns; i++)
 		{
-			out << endl<<endl<< "COLUMN " << i << ": ";
+			out << endl << endl << "COLUMN " << i << ": ";
 			out << table.columns[i];
 		}
 	}
@@ -931,7 +926,7 @@ string operator -(string string1, string string2)
 }
 
 //reading a command from a file
-void operator >>(ifstream& file, Command &command)
+void operator >>(ifstream& file, Command& command)
 {
 	string name;
 	getline(file, name);
@@ -965,11 +960,11 @@ void operator <<(ostream& out, Command command) {
 class DropCommand
 {
 	Command command;
-	string tableName="";
+	string tableName = "";
 	UsefulFunctions function;
 	File theDatabase;
 public:
-	DropCommand(Command command, File &theDatabase)
+	DropCommand(Command command, File& theDatabase)
 	{
 		checkDrop(command.getName());
 		this->theDatabase = theDatabase;
@@ -979,7 +974,7 @@ private:
 	void checkDrop(string commandName)
 	{
 		commandName = function.subStringWithoutSpaces(commandName);
-		if (function.findChars(commandName, function.CAPS) == 1 || function.findChars(commandName, function.SIGNS) == 1 || function.findChars(commandName, function.NoCAPS) == 0 || function.findChars(commandName, " ")==true)
+		if (function.findChars(commandName, function.CAPS) == 1 || function.findChars(commandName, function.SIGNS) == 1 || function.findChars(commandName, function.NoCAPS) == 0 || function.findChars(commandName, " ") == true)
 		{
 			throw new InvalidCommandException("The DROP command has the wrong table name", 0);
 		}
@@ -995,7 +990,7 @@ private:
 		tableName = function.subStringWithoutSpaces(tableName);
 		cout << "The table you want to drop is: " << tableName << endl;
 		int pozitionInFile = this->theDatabase.searchFile(tableName.c_str());
-		if (pozitionInFile==-1)
+		if (pozitionInFile == -1)
 		{
 			throw new InvalidCommandException("There is no tabel with this name to be dropped!", 0);
 		}
@@ -1006,8 +1001,8 @@ private:
 			{
 				cout << theDatabase.getTheLine(i) << endl;
 			}
-			theDatabase-pozitionInFile;
-			cout << endl<<"AFTER the command the database has the following tables: " << endl<<endl;
+			this->theDatabase.deleteTable(pozitionInFile);
+			cout << endl << "AFTER the command the database has the following tables: " << endl << endl;
 			for (int i = 1; i < theDatabase.getNoLines(); i++)
 			{
 				cout << theDatabase.getTheLine(i) << endl;
@@ -1016,18 +1011,18 @@ private:
 			//removing the actual file
 			string fileName = tableName + ".bin";
 			remove(fileName.c_str());
-			cout <<endl<< "Congrats! Your file <<" << fileName << ">> has been removed and the table <<" << tableName << ">> is no longer in the database!"<<endl;
+			cout << endl << "Congrats! Your file <<" << fileName << ">> has been removed and the table <<" << tableName << ">> is no longer in the database!" << endl;
 			createTheNewDatabase();
 		}
 	}
 	void createTheNewDatabase()
 	{
 		fstream theNewDatabase;
-		theNewDatabase.open("Database.txt", ios::out | ios::trunc |ios::in);
-		int i = 0; 
+		theNewDatabase.open("Database.txt", ios::out | ios::trunc | ios::in);
+		int i = 0;
 		while (i < theDatabase.getNoLines())
 		{
-			theNewDatabase << this->theDatabase.getTheLine(i)<<endl;
+			theNewDatabase << this->theDatabase.getTheLine(i) << endl;
 			i++;
 		}
 
@@ -1058,13 +1053,13 @@ private:
 	void checkDisplay(string commandName)
 	{
 		commandName = function.subStringWithoutSpaces(commandName);
-		if (function.findChars(commandName, function.CAPS) == 1 || function.findChars(commandName, function.SIGNS) == 1 || function.findChars(commandName, function.NoCAPS) == 0 || function.findChars(commandName, " ")==true)
+		if (function.findChars(commandName, function.CAPS) == 1 || function.findChars(commandName, function.SIGNS) == 1 || function.findChars(commandName, function.NoCAPS) == 0 || function.findChars(commandName, " ") == true)
 		{
 			throw new InvalidCommandException("The DISPLAY command has the wrong table name", 0);
 		}
 		else
 		{
-			cout << "The command is correct. We are now executing it: "<<endl;
+			cout << "The command is correct. We are now executing it: " << endl;
 		}
 	}
 	void doDisplay(string commandName)
@@ -1079,13 +1074,13 @@ private:
 		}
 		else
 		{
-			cout << endl<<"Displaying the table..." << endl;
+			cout << endl << "Displaying the table..." << endl;
 			string fileName = tableName + ".bin";
 
 			Table theTable(tableName.c_str());
 
 			theTable.readTableFromBin(fileName);
-			
+
 			cout << endl << "------------------------------------" << endl << "THE TABLE: " << endl;
 			cout << theTable;
 		}
@@ -1103,7 +1098,7 @@ class CreateCommand
 	File theDatabase;
 	Table tabelCreat;
 public:
-	CreateCommand(Command command, File &theDatabase)
+	CreateCommand(Command command, File& theDatabase)
 	{
 		ValidareSerioasaCreate(command.getName(), this->tabelCreat);
 		this->theDatabase = theDatabase;
@@ -1166,16 +1161,16 @@ private:
 		}
 	}
 
-	void ValidareSerioasaCreate(string commanda, Table &tabelCreat) {// string& name, string& type, int& dim, string& value) {
+	void ValidareSerioasaCreate(string commanda, Table& tabelCreat) {// string& name, string& type, int& dim, string& value) {
 		string newCommand = commanda;
-		string editable="";
-		string parametriiTabel="";
-		string copyEditable="";
+		string editable = "";
+		string parametriiTabel = "";
+		string copyEditable = "";
 		// parametrii ce vor putea fi dati si de sus cand doriti 
-		string name="";
-		string type="";
-		int dim=0;
-		string value="";
+		string name = "";
+		string type = "";
+		int dim = 0;
+		string value = "";
 		// next
 		// in order to check everything first we strip the table name until ( by any spaces in order to check it lexically 
 		editable = newCommand.substr(0, newCommand.find_first_of('('));
@@ -1185,8 +1180,8 @@ private:
 			int noLettersTableName = 0;
 			noLettersTableName = copyEditable.find_first_of('I');
 			if (copyEditable.compare(copyEditable.find_first_of('I'), 11, "IFNOTEXISTS") == 0 && copyEditable.length() == (noLettersTableName + 11)) {
-//VALI: aici faci verificarea in Database.txt sa vezi daca apare sau nu tableName (te folosesti de functia isTableInFile din Useful
-				//(returneaza linia la care apare numele tabelului, daca e in txt sau -1 daca nu e in txt, ai exemplu in drop)
+				//VALI: aici faci verificarea in Database.txt sa vezi daca apare sau nu tableName (te folosesti de functia isTableInFile din Useful
+								//(returneaza linia la care apare numele tabelului, daca e in txt sau -1 daca nu e in txt, ai exemplu in drop)
 				copyEditable = copyEditable.erase(copyEditable.find_first_of('I'), 11);
 				cout << endl << "We create new table " << copyEditable;
 			}
@@ -1194,13 +1189,13 @@ private:
 				throw new InvalidCommandException("wrong if not exists", 0);
 		}
 
-		
-			
+
+
 		if (function.checkAsciiValue(copyEditable, 'a', 'z') != 0) {
 			throw new InvalidCommandException("Wrong table name", 0);
 		}
 		else {
-//aici cred ca ajungi cu copyEditable ca numele tabelului, asa ca:
+			//aici cred ca ajungi cu copyEditable ca numele tabelului, asa ca:
 			strcpy(tabelCreat.tableName, copyEditable.c_str()); //am folosit c_str() ca sa transform string-ul (copyEditable) in char* (tableName). Gasesti functia pe google. 
 			int counter;
 			newCommand.erase(0, editable.length());
@@ -1211,22 +1206,22 @@ private:
 			else {
 				if (function.nrChars(newCommand, '(', counter) == 1) {
 					createParamVandPars(newCommand, name, type, dim, value);
-//aici atribui primei coloane valorile (nu cred ca aveai nevoie sa verifici daca e doar o coloana sau mai multe, dar nu mai are sens sa stergem acum:
+					//aici atribui primei coloane valorile (nu cred ca aveai nevoie sa verifici daca e doar o coloana sau mai multe, dar nu mai are sens sa stergem acum:
 					cout << "The command is correct. We are now executing it...";
 					tabelCreat.noColumns = 1;
 					TableColumn column;
 					column.setName(name);
-//VALI aici e nevoie de setteri pt toate valorile coloanei. Daca ai timp, defineste-i tu in clasa coloana, te rog, sau spune-i lui Radu ms
+					//VALI aici e nevoie de setteri pt toate valorile coloanei. Daca ai timp, defineste-i tu in clasa coloana, te rog, sau spune-i lui Radu ms
 					column.setType(type);
 					column.setDim(dim);
 					column.setDefault(value);
-				
-//aici fac atribuirea coloanei nou create la tabel. Daca ai definit operatorul << corect, ar trebui sa mearga. 
+
+					//aici fac atribuirea coloanei nou create la tabel. Daca ai definit operatorul << corect, ar trebui sa mearga. 
 					tabelCreat += column;
 				}
 				else   // else we will strip the columns by the commas and spaces dividing them and then call the functions one by one while also deleting from the command string
 				{
-//aici o sa folosesc tabelCreate.noColumns pe post de contor, adica o sa inceapa de la 0 si o sa creasca de fiecare data cand gasesti o coloana noua:
+					//aici o sa folosesc tabelCreate.noColumns pe post de contor, adica o sa inceapa de la 0 si o sa creasca de fiecare data cand gasesti o coloana noua:
 					tabelCreat.noColumns = 0;
 					newCommand = newCommand.substr(newCommand.find_first_of('(') + 1, newCommand.find_last_of(')') - 1);
 					newCommand = function.stringWithoutCommasOrSpaces(newCommand);
@@ -1234,15 +1229,15 @@ private:
 
 						parametriiTabel = newCommand.substr(0, newCommand.find_first_of(')') + 1);
 						createParamVandPars(parametriiTabel, name, type, dim, value);
-//aici fac acelasi lucru ca mai sus, doar ca se va executa de mai multe ori. Nu e nevoie sa facem un vector de coloane pt ca nu vom avea nevoie de coloane in sine,
-						//sunt doar intermediare ca sa putem adauga la tabel:
+						//aici fac acelasi lucru ca mai sus, doar ca se va executa de mai multe ori. Nu e nevoie sa facem un vector de coloane pt ca nu vom avea nevoie de coloane in sine,
+												//sunt doar intermediare ca sa putem adauga la tabel:
 						TableColumn column;
 						column.setName(name);
-//VALI aici e nevoie de setteri pt toate valorile coloanei. Daca ai timp, defineste-i tu in clasa coloana, te rog, sau spune-i lui Radu ms
+						//VALI aici e nevoie de setteri pt toate valorile coloanei. Daca ai timp, defineste-i tu in clasa coloana, te rog, sau spune-i lui Radu ms
 						column.setType(type);
 						column.setDim(dim);
 						column.setDefault(value);
-//aici fac atribuirea coloanei nou create la tabel. Daca ai definit operatorul << corect, ar trebui sa mearga.
+						//aici fac atribuirea coloanei nou create la tabel. Daca ai definit operatorul << corect, ar trebui sa mearga.
 						tabelCreat += column;
 						newCommand.erase(0, parametriiTabel.length());
 					}
@@ -1255,19 +1250,19 @@ private:
 
 	void doCreate(string commandName)
 	{
-		cout << tabelCreat;
-		cout << endl;
+		cout << tabelCreat.tableName << endl << endl;
+
 		this->tabelCreat.writeTableToBin(this->tabelCreat.tableName);
-		this->theDatabase=this->theDatabase+tabelCreat.tableName;
+		this->theDatabase.addTable(this->tabelCreat.tableName);
 		createTheNewDatabase();
 	}
-	
+
 	void createTheNewDatabase()
 	{
 		fstream theNewDatabase;
 		theNewDatabase.open("Database.txt", ios::out | ios::trunc | ios::in);
 		int i = 0;
-		while (i < theDatabase.getNoLines())
+		while (i < this->theDatabase.getNoLines())
 		{
 			theNewDatabase << this->theDatabase.getTheLine(i) << endl;
 			i++;
@@ -1278,6 +1273,7 @@ private:
 			string line;
 			getline(theNewDatabase, line);
 		}
+		theNewDatabase.close();
 	}
 };
 
@@ -1291,14 +1287,14 @@ class SelectCommand
 	File theDatabase;
 	string tableName = "", selectedValues = "", filter = "", filterValue = "";
 public:
-	SelectCommand(Command command, File &theDatabase)
+	SelectCommand(Command command, File& theDatabase)
 	{
 		checkSelect(command.getName(), this->tableName, this->selectedValues, this->filter, this->filterValue);
 		this->theDatabase = theDatabase;
 		doSelect(command.getName());
 	}
 private:
-	void checkSelect(string commandName, string &tableName, string &theSelectedValues, string &filter, string &filterValue)
+	void checkSelect(string commandName, string& tableName, string& theSelectedValues, string& filter, string& filterValue)
 	{
 		int counter1 = 0, counter2 = 0;
 		commandName = function.subStringWithoutSpaces(commandName);
@@ -1308,7 +1304,7 @@ private:
 			string selectedValues = theSelectedValues;
 			commandName.erase(0, selectedValues.length());
 			//check the selected values
-			if (selectedValues[0] != '(' || selectedValues[selectedValues.length() - 1] != ')' || selectedValues=="()")
+			if (selectedValues[0] != '(' || selectedValues[selectedValues.length() - 1] != ')' || selectedValues == "()")
 			{
 				throw new InvalidCommandException("Not a column", 0);
 			}
@@ -1396,20 +1392,20 @@ private:
 				throw new InvalidCommandException("Not proper value name OR multiple conditions", 0);
 			}
 		}
-		cout << "The command is correct. We are now executing it..."<<endl;
+		cout << "The command is correct. We are now executing it..." << endl;
 	}
 
 	void doSelect(string commandName)
 	{
-		cout << endl<<"We are selecting the following columns: " << this->selectedValues;
+		cout << endl << "We are selecting the following columns: " << this->selectedValues;
 		cout << endl << "From the table called: " << this->tableName;
 		if (this->filter == "")
-			cout <<endl<< "There is no filter. Taking all the attributes...";
+			cout << endl << "There is no filter. Taking all the attributes...";
 		else {
 			cout << endl << "Filtering by column: " << this->filter;
 			cout << endl << "With the value: " << this->filterValue;
 		}
-				
+
 		int pozitionInFile = this->theDatabase.searchFile(tableName.c_str());
 		if (pozitionInFile == -1)
 		{
@@ -1429,22 +1425,22 @@ class UpdateCommand
 	Command command;
 	UsefulFunctions function;
 	File theDatabase;
-	string tableName = "", columnToChange="", valueToChange = "", filter = "", filterValue="";
+	string tableName = "", columnToChange = "", valueToChange = "", filter = "", filterValue = "";
 public:
-	UpdateCommand(Command command, File &theDatabase)
+	UpdateCommand(Command command, File& theDatabase)
 	{
 		checkUpdate(command.getName(), this->tableName, this->columnToChange, this->valueToChange, this->filter, this->filterValue);
 		this->theDatabase = theDatabase;
 		doUpdate(command.getName());
 	}
 private:
-	void checkUpdate(string commandName, string &tableName, string &columnToChange, string &valueToChange, string &filter, string &filterValue)
+	void checkUpdate(string commandName, string& tableName, string& columnToChange, string& valueToChange, string& filter, string& filterValue)
 	{
 		//check table name
 		int counter1 = 0, counter2 = 0;
 		tableName = function.extract(commandName, commandName[0], ' ', counter1, counter2);
 		commandName.erase(counter1, counter2);
-		commandName=function.subStringWithoutSpaces(commandName);
+		commandName = function.subStringWithoutSpaces(commandName);
 		if ((tableName.find("(") != tableName.npos) || (tableName.find(" ") != tableName.npos) || (tableName.find(",") != tableName.npos))
 		{
 			throw new InvalidCommandException("The UPDATE command has the wrong table name", 0);
@@ -1453,7 +1449,7 @@ private:
 		counter1 = 0, counter2 = 0;
 		string setKeyword = function.extract(commandName, commandName[0], ' ', counter1, counter2);
 		commandName.erase(counter1, counter2);
-		commandName=function.subStringWithoutSpaces(commandName);
+		commandName = function.subStringWithoutSpaces(commandName);
 		if (setKeyword != "SET")
 		{
 			throw new InvalidCommandException("The UPDATE command hasn't got the SET keyword", 0);
@@ -1463,7 +1459,7 @@ private:
 		string columnName = function.extract(commandName, commandName[0], ' ', counter1, counter2);
 		columnToChange = columnName;
 		commandName.erase(counter1, counter2);
-		commandName=function.subStringWithoutSpaces(commandName);
+		commandName = function.subStringWithoutSpaces(commandName);
 		if (function.findChars(columnName, function.CAPS) == 1 || function.findChars(columnName, function.SIGNS) == 1)
 		{
 			throw new InvalidCommandException("The UPDATE command hasn't got the proper column name", 0);
@@ -1475,13 +1471,13 @@ private:
 			throw new InvalidCommandException("The UPDATE command hasn't got the EQUAL sign", 0);
 		}
 		commandName.erase(counter1, counter2);
-		commandName=function.subStringWithoutSpaces(commandName);
+		commandName = function.subStringWithoutSpaces(commandName);
 		//check value to be changed
 		counter1 = 0, counter2 = 0;
 		string columnValue = function.extract(commandName, commandName[0], ' ', counter1, counter2);
 		valueToChange = columnValue;
 		commandName.erase(counter1, counter2);
-		commandName=function.subStringWithoutSpaces(commandName);
+		commandName = function.subStringWithoutSpaces(commandName);
 		if (function.findChars(columnValue, function.SIGNS) == true)
 		{
 			throw new InvalidCommandException("The UPDATE command hasn't got the proper column value sign", 0);
@@ -1490,7 +1486,7 @@ private:
 		counter1 = 0, counter2 = 5;
 		string WHERE = commandName.substr(0, 5);
 		commandName.erase(counter1, counter2);
-		commandName=function.subStringWithoutSpaces(commandName);
+		commandName = function.subStringWithoutSpaces(commandName);
 		if (WHERE != "WHERE")
 		{
 			throw new InvalidCommandException("The UPDATE command hasn't got the WHERE keyword!", 0);
@@ -1500,7 +1496,7 @@ private:
 		columnName = function.extract(commandName, commandName[0], ' ', counter1, counter2);
 		filter = columnName;
 		commandName.erase(counter1, counter2);
-		commandName=function.subStringWithoutSpaces(commandName);
+		commandName = function.subStringWithoutSpaces(commandName);
 		if (function.findChars(columnName, function.CAPS) == 1 || function.findChars(columnName, function.SIGNS) == 1)
 		{
 			throw new InvalidCommandException("The UPDATE command hasn't got the proper column name", 0);
@@ -1513,7 +1509,7 @@ private:
 			throw new InvalidCommandException("The UPDATE command hasn't got the EQUAL sign", 0);
 		}
 		commandName.erase(counter1, counter2);
-		commandName=function.subStringWithoutSpaces(commandName);
+		commandName = function.subStringWithoutSpaces(commandName);
 		//check column value to be updated
 		counter1 = 0, counter2 = 0;
 		columnValue = function.extract(commandName, commandName[0], commandName[commandName.length()], counter1, counter2);
@@ -1524,7 +1520,7 @@ private:
 		{
 			throw new InvalidCommandException("The UPDATE command hasn't got the proper column value sign", 0);
 		}
-		cout << "The command is correct. We are now executing it..."<<endl;
+		cout << "The command is correct. We are now executing it..." << endl;
 	}
 
 	void doUpdate(string commandName)
@@ -1555,14 +1551,14 @@ class DeleteCommand {
 	File theDatabase;
 	string tableName = "", columnName = "", columnValue = "";
 public:
-	DeleteCommand(Command command, File &theDatabase)
+	DeleteCommand(Command command, File& theDatabase)
 	{
 		checkDelete(command.getName(), this->tableName, this->columnName, this->columnValue);
 		this->theDatabase = theDatabase;
 		doDelete(command.getName());
 	}
 private:
-	void checkDelete(string commandName, string &tableName, string &columnName, string &columnValue)  // "table_name WHERE column_name = value"
+	void checkDelete(string commandName, string& tableName, string& columnName, string& columnValue)  // "table_name WHERE column_name = value"
 	{
 		int counter1 = 0, counter2 = 0;
 		//check FROM keyword
@@ -1617,7 +1613,7 @@ private:
 		{
 			throw new InvalidCommandException("The DELETE command hasn't got the proper column value sign", 0);
 		}
-		cout << "The command is correct. We are now executing it..."<<endl;
+		cout << "The command is correct. We are now executing it..." << endl;
 	}
 
 	void doDelete(string commandName)
@@ -1645,7 +1641,7 @@ class InsertCommand
 	UsefulFunctions function;
 	fstream theDatabase;
 public:
-	InsertCommand(Command command, fstream &theDatabase) {
+	InsertCommand(Command command, fstream& theDatabase) {
 		insertValidation(command.getName());
 	}
 private:
@@ -1737,7 +1733,7 @@ class Parser
 	File theDatabase;
 public:
 
-	Parser(Command command, File &theDatabase)
+	Parser(Command command, File& theDatabase)
 	{
 		this->FirstWord = command.getFirstWord();
 		this->SecondWord = command.getSecondWord();
@@ -1771,7 +1767,7 @@ public:
 		}
 		if (FirstWord == "INSERT")
 		{
-		//	InsertCommand object(command, this->theDatabase);
+			//	InsertCommand object(command, this->theDatabase);
 		}
 	}
 
@@ -1787,6 +1783,7 @@ public:
 
 	}
 };
+
 
 
 
