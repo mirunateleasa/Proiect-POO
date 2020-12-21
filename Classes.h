@@ -1036,6 +1036,7 @@ private:
 
 //2. DISPLAY
 //MERGE PENTRU TOATE EXEMPLELE
+
 class DisplayCommand
 {
 	Command command;
@@ -1081,7 +1082,6 @@ private:
 
 			theTable.readTableFromBin(fileName);
 
-			cout << endl << "------------------------------------" << endl << "THE TABLE: " << endl;
 			cout << theTable;
 		}
 	}
