@@ -55,6 +55,11 @@ public:
 		return this->noLines;
 	}
 
+	int setNoLines(int noLines)
+	{
+		this->noLines = noLines;
+	}
+
 	void deleteTable(int i)
 	{
 		int noTables = stoi(this->lines[0]) - 2;
@@ -73,7 +78,7 @@ public:
 		delete[]lines;
 		lines = new string[noTables + 1];
 		lines = result;
-		this->noLines--;
+		this->noLines = noTables + 1;
 	}
 
 	void addTable(string tableName)
@@ -96,7 +101,10 @@ public:
 
 	string getTheLine(int i)
 	{
-		return lines[i];
+		//if (i < this->noLines)
+			return lines[i];
+		//else
+			//cout << endl << "Sa ma bata mama";
 	}
 
 	int searchFile(const char numeTabel[])
@@ -997,15 +1005,16 @@ private:
 		else
 		{
 			cout << endl << "BEFORE the command the database has the following tables: " << endl;
-			for (int i = 1; i < theDatabase.getNoLines(); i++)
+			for (int i = 1; i < this->theDatabase.getNoLines(); i++)
 			{
-				cout << theDatabase.getTheLine(i) << endl;
+				cout << this->theDatabase.getTheLine(i) << endl;
 			}
 			this->theDatabase.deleteTable(pozitionInFile);
 			cout << endl << "AFTER the command the database has the following tables: " << endl << endl;
-			for (int i = 1; i < theDatabase.getNoLines(); i++)
+			for (int i = 1; i < this->theDatabase.getNoLines(); i++)
 			{
-				cout << theDatabase.getTheLine(i) << endl;
+				cout << endl << this->theDatabase.getNoLines();
+				cout << this->theDatabase.getTheLine(i) << endl;
 			}
 
 			//removing the actual file
@@ -1020,7 +1029,8 @@ private:
 		fstream theNewDatabase;
 		theNewDatabase.open("Database.txt", ios::out | ios::trunc | ios::in);
 		int i = 0;
-		while (i < theDatabase.getNoLines())
+		cout << endl << "********AICI" << this->theDatabase.getNoLines();
+		while (i < this->theDatabase.getNoLines())
 		{
 			theNewDatabase << this->theDatabase.getTheLine(i) << endl;
 			i++;
@@ -1031,6 +1041,7 @@ private:
 			string line;
 			getline(theNewDatabase, line);
 		}
+		cout <<endl<< "ajunge la final ";
 	}
 };
 
@@ -1783,8 +1794,3 @@ public:
 
 	}
 };
-
-
-
-
-
