@@ -102,7 +102,7 @@ public:
 	string getTheLine(int i)
 	{
 		//if (i < this->noLines)
-			return lines[i];
+		return lines[i];
 		//else
 			//cout << endl << "Sa ma bata mama";
 	}
@@ -319,6 +319,29 @@ public:
 		this->value = newAttribute.value;
 	}
 
+	string getValue()
+	{
+		return this->value;
+	}
+
+	void setAttributeString(string temp) {
+		this->value = temp;
+	}
+	void setAttributeType(string type) {
+		if (type == "FLOAT")
+		{
+			this->type = FLOAT;
+		}
+		if (type == "INTEGER")
+		{
+			this->type = INTEGER;
+		}
+		if (type == "STRING")
+		{
+			this->type = STRING;
+		}
+	}
+
 	void writeAttirbuteToBin(ofstream& File)
 	{
 		//write the value (string)
@@ -423,7 +446,7 @@ public:
 		if (attributes != nullptr)
 			delete[] attributes;
 	}
-	TableColumn(const TableColumn& newColumn) {
+	TableColumn(TableColumn& newColumn) {
 		strcpy_s(this->columnName, 100, newColumn.columnName);
 		this->columnName[99] = '\0';
 		this->defaultValue = newColumn.defaultValue;
@@ -434,7 +457,7 @@ public:
 		}
 		this->dimension = newColumn.dimension;
 	}
-	void operator=(TableColumn& newColumn) {
+	TableColumn operator=(TableColumn& newColumn) {
 		if (this != &newColumn) {
 			if (this->attributes) {
 				delete[] this->attributes;
@@ -448,6 +471,7 @@ public:
 			}
 			this->dimension = newColumn.dimension;
 		}
+		return *this;
 	}
 
 	void operator+(ColumnAttribute attribute) {
@@ -466,6 +490,17 @@ public:
 	void operator+=(ColumnAttribute column) {
 		*this + column;
 	}
+
+	ColumnAttribute *getAttribute(int i)
+	{
+		return &this->attributes[i];
+	}
+
+	int getNoAttributes()
+	{
+		return this->noAttributes;
+	}
+
 
 	void writeColumnToBin(ofstream& File)
 	{
@@ -580,10 +615,10 @@ public:
 	}
 
 	friend class Table;
-	friend void operator <<(ostream& out, TableColumn& column);
+	friend void operator <<(ostream& out, TableColumn &column);
 };
 
-void operator <<(ostream& out, TableColumn& column)
+void operator <<(ostream& out, TableColumn &column)
 {
 	out << endl << "Name: ";
 	for (int i = 0; i < strlen(column.columnName); i++)
@@ -682,6 +717,16 @@ public:
 			delete[]this->columns;
 		this->noColumns++;
 		this->columns = newColumns;
+	}
+
+	int getNoColumns()
+	{
+		return this->noColumns;
+	}
+
+	TableColumn *getColumn(int i)
+	{
+		return &this->columns[i];
 	}
 
 	void operator +=(TableColumn& column)
@@ -1041,7 +1086,7 @@ private:
 			string line;
 			getline(theNewDatabase, line);
 		}
-		cout <<endl<< "ajunge la final ";
+		cout << endl << "ajunge la final ";
 	}
 };
 
@@ -1111,8 +1156,8 @@ class CreateCommand
 public:
 	CreateCommand(Command command, File& theDatabase)
 	{
-		ValidareSerioasaCreate(command.getName(), this->tabelCreat);
 		this->theDatabase = theDatabase;
+		ValidareSerioasaCreate(command.getName(), this->tabelCreat);
 		doCreate(command.getName());
 	}
 private:
@@ -1190,14 +1235,23 @@ private:
 		{
 			int noLettersTableName = 0;
 			noLettersTableName = copyEditable.find_first_of('I');
-			if (copyEditable.compare(copyEditable.find_first_of('I'), 11, "IFNOTEXISTS") == 0 && copyEditable.length() == (noLettersTableName + 11)) {
-				//VALI: aici faci verificarea in Database.txt sa vezi daca apare sau nu tableName (te folosesti de functia isTableInFile din Useful
+			if (copyEditable.compare(copyEditable.find_first_of('I'), 11, "IFNOTEXISTS") == 0 && copyEditable.length() == (noLettersTableName + 11)) 
+			{	//VALI: aici faci verificarea in Database.txt sa vezi daca apare sau nu tableName (te folosesti de functia isTableInFile din Useful
 								//(returneaza linia la care apare numele tabelului, daca e in txt sau -1 daca nu e in txt, ai exemplu in drop)
+				if (theDatabase.searchFile(copyEditable.c_str()) >= 0)
+				{
+					throw new InvalidCommandException("wrong if not exists", 0);
+				}
 				copyEditable = copyEditable.erase(copyEditable.find_first_of('I'), 11);
 				cout << endl << "We create new table " << copyEditable;
 			}
 			else
+			{
+
 				throw new InvalidCommandException("wrong if not exists", 0);
+
+			}
+
 		}
 
 
@@ -1261,6 +1315,7 @@ private:
 
 	void doCreate(string commandName)
 	{
+		cout << "AICIIIIIIIIIIIIIIIIIIIIII";
 		cout << tabelCreat.tableName << endl << endl;
 
 		this->tabelCreat.writeTableToBin(this->tabelCreat.tableName);
@@ -1270,6 +1325,7 @@ private:
 
 	void createTheNewDatabase()
 	{
+
 		fstream theNewDatabase;
 		theNewDatabase.open("Database.txt", ios::out | ios::trunc | ios::in);
 		int i = 0;
@@ -1424,9 +1480,101 @@ private:
 		}
 		else
 		{
-			//de facut dupa create
+			string fileName = tableName + ".bin";
+
+			Table theTable(tableName.c_str());
+			theTable.readTableFromBin(fileName);
+
+		//extracting the names of the columns that you want to display:
+			string* value = new string[theTable.getNoColumns()];
+			int i = 0;
+			if (selectedValues != "ALL")
+			{
+				int j = 0;
+				selectedValues.erase(0, 1);
+				selectedValues.erase(selectedValues.find_last_of(')'), 1);
+				while (selectedValues != "")
+				{
+					int counter1 = 0, counter2 = 0;
+					if (selectedValues.find(',') != string::npos)
+					{
+						value[j] = function.extract(selectedValues, selectedValues[0], ',', counter1, counter2);
+						selectedValues.erase(counter1, counter2 + 1);
+					}
+					else
+					{
+						value[j] = selectedValues;
+						selectedValues = "";
+					}
+					j++;
+				}
+				i = j;
+			}
+
+			else
+			{
+				for (int i = 0; i < theTable.getNoColumns(); i++)
+				{
+					value[i] =(*theTable.getColumn(i)).getName();
+				}
+				i = theTable.getNoColumns();
+			}
+			
+		//using the filter to find the rows you want to display
+			if (filter == "")
+			{
+				for (int j = 0; j < i; j++)
+				{
+					cout <<endl<< "------------------------------";
+					displaySomeColumns(theTable, value[j]);
+				}
+			}
+			else
+			{
+				for (int j = 0; j < i; j++)
+				{
+					cout << endl << "------------------------------";
+					displaySomeColumns(theTable, value[j]);
+				}
+			}
+			
 		}
 	}
+
+	void displaySomeAttributes(TableColumn& theColumn, string filterValue)
+	{
+		if (filterValue != "No filter")
+		{
+			for (int i = 0; i < theColumn.getNoAttributes(); i++)
+			{
+				if ((*theColumn.getAttribute(i)).getValue() == filterValue)
+				{
+					cout << (*theColumn.getAttribute(i));
+				}
+			}
+		}
+		else
+		{
+			for (int i = 0; i < theColumn.getNoAttributes(); i++)
+			{
+					cout << (*theColumn.getAttribute(i));
+			}
+		}
+	}
+
+	void displaySomeColumns(Table &theTable, string value)
+	{
+			for (int i = 0; i < theTable.getNoColumns(); i++)
+			{
+				if ((*theTable.getColumn(i)).getName() == value)
+				{
+					displaySomeAttributes(*theTable.getColumn(i), "No filter");
+					//cout << (*theTable.getColumn(i));
+				}			
+			}
+		
+	}
+
 };
 
 //5. UPDATE
@@ -1651,12 +1799,14 @@ class InsertCommand
 	Command command;
 	UsefulFunctions function;
 	fstream theDatabase;
+	Table theTable;
 public:
-	InsertCommand(Command command, fstream& theDatabase) {
-		insertValidation(command.getName());
+	InsertCommand(Command command/*, fstream& theDatabase*/) {
+		insertValidation(command.getName(), theTable);
 	}
 private:
-	void insertValidation(string Command) {
+	void insertValidation(string Command, Table& theTable) {
+		// trebuie sa am noColumns .
 		string newCommand = Command;
 		string editable;
 		string parametriiTabel;
@@ -1664,7 +1814,11 @@ private:
 
 		int noParam = 0;
 		int startPoint = 0;
-		int numberOfParam = 4; // ATENTIE !! ACEST NUMAR SE VA PRIMI DIN CREATE TABLE la APELARE CUMVA
+		// se pune conditia in DO insert
+		//int numberOfParam = theTable.getNoColumns(); // ATENTIE !! ACEST NUMAR SE VA PRIMI DIN CREATE TABLE la APELARE CUMVA
+		////validare pt nr de parametrii primiti care trb sa fie egal cu nr de coloane
+		//if(function.findChars(newCommand, ',')!= numberOfParam)
+		//	throw 
 
 		//validare paranteze 
 		if (function.nrChars(newCommand, '(', noParam) != 1 && function.nrChars(newCommand, ')', noParam) != 1) {
@@ -1701,12 +1855,18 @@ private:
 		// INSERT INTO studenti VALUES (1,”John” ”1001”)  -- exemplul ruleaza desi e gresit.
 
 		// now we go parameter by parameter
+		ColumnAttribute attribute;
 		while (startPoint < noParam) {
 			parametriiTabel = editable.substr(0, editable.find_first_of(','));
 			int temp = 0;
 			if (function.nrChars(parametriiTabel, '"', temp)) {
 				string temp = parametriiTabel.substr(1, parametriiTabel.find_last_of('"') - 1);
-				cout << endl << "Parametrul tabel la iteratie " << startPoint << " este " << temp << " si este tip string";
+				//cout << endl << "Parametrul tabel la iteratie " << startPoint << " este " << temp << " si este tip string";
+				// variabila temp este columnAttribute Value
+
+				attribute.setAttributeString(temp);
+				attribute.setAttributeType("STRING");
+
 			}
 			else {
 				float value;
@@ -1716,16 +1876,31 @@ private:
 				else if (function.nrChars(temporary, '.', temp) == 1) {
 					temporary = temporary.erase(temporary.find_first_of('.'), 1);
 				}
+				else if (function.nrChars(temporary, '.', temp) == 0)
+					if (function.checkAsciiValue(temporary, '0', '9') == 0)
+					{
+						attribute.setAttributeString(parametriiTabel);
+						attribute.setAttributeType("INTEGER");
+					}
+				//23.5 -> 235
+
 				if (function.checkAsciiValue(temporary, '0', '9')) {
 					throw new InvalidCommandException("nu este string dar are litere", 0);
 				}
 				else {
 					value = stof(parametriiTabel);
-					cout << endl << "Parametrul tabel la iteratie " << startPoint << " este floatul " << value;
+					//cout << endl << "Parametrul tabel la iteratie " << startPoint << " este floatul " << value;
+					string value1 = to_string(value);
+					attribute.setAttributeString(value1);
+					attribute.setAttributeType("FLOAT");
+					// variabila parametriiTable este columnAttribute Value (string)
 				}
+
 			}
 			editable.erase(0, parametriiTabel.length() + 1);
 			startPoint++;
+
+			cout <<endl<<endl<< attribute;
 		}
 
 	}
@@ -1778,7 +1953,7 @@ public:
 		}
 		if (FirstWord == "INSERT")
 		{
-			//	InsertCommand object(command, this->theDatabase);
+			InsertCommand object(command);
 		}
 	}
 
