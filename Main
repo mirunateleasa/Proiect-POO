@@ -12,13 +12,13 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-	cout << "HELLO!"<<endl<<"--------------------------"<<endl;
-	cout << "argc= " << argc<<endl;
+	cout << "HELLO!" << endl << "--------------------------" << endl;
+	cout << "argc= " << argc << endl;
 	for (int i = 0; i < argc; i++)
 	{
-		cout << "argv[" << i << "]=" << argv[i]<<endl;
-	}	
-	
+		cout << "argv[" << i << "]=" << argv[i] << endl;
+	}
+
 	ifstream theCommandsFile;
 	theCommandsFile.open(argv[1], ios::in);
 	File theCommands(argv[1]);
@@ -36,13 +36,17 @@ int main(int argc, char* argv[])
 	int noOfCommands = theCommands.getNoLines();
 	int i = 1;
 
-	while (noOfCommands != 0)
+	while (noOfCommands > 0)
 	{
 		theCommand = theCommands.getTheLine(i);
 		command.setName(theCommand);
-		cout << "The command to execute is: " << command.getFirstWord()<<" "<<command.getSecondWord()<< endl;
+		cout << endl<<endl<<endl<<"------------------------------------------------------NEW COMMAND: "<<endl<<"The command to execute is: " << command.getFirstWord() << " " << command.getSecondWord() << endl;
 		Parser parsing(command, theDatabase);
 		parsing.Parse(command);
+		theDatabaseFile.open("Database.txt", ios::in);
+		File theDatabase("Database.txt");
+		theDatabase.setContent(theDatabaseFile);
+		theDatabaseFile.close();
 		noOfCommands--;
 		i++;
 	}
