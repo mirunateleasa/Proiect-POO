@@ -275,6 +275,7 @@ public:
 //"12" cu "23" si attribute1.type cu attribute2.type (putem sa facem asta intr-un operator ==). 
 //Practic daca au acelasi type si aceeasi valoare sunt egale, nu trebuie sa comparam in sine 12 cu 23
 //pwp
+
 enum AttributeType { INTEGER, FLOAT, STRING };
 
 class ColumnAttribute {
@@ -323,6 +324,16 @@ public:
 		return this->value;
 	}
 
+	string getType()
+	{
+		if (this->type == INTEGER)
+			return "INTEGER";
+		if (this->type == STRING)
+			return "STRING";
+		if (this->type == FLOAT)
+			return "FLOAT";
+	}
+
 	void setAttributeFloat(string value) {
 		this->value = value;
 		this->type = FLOAT;
@@ -330,7 +341,15 @@ public:
 
 	void setAttributeString(string temp) {
 		this->value = temp;
+		this->type = STRING;
 	}
+
+	void setAttributeInteger(string value)
+	{
+		this->value = value;
+		this->type = INTEGER;
+	}
+
 	void setAttributeType(string type) {
 		if (type == "FLOAT")
 		{
@@ -520,6 +539,13 @@ public:
 	ColumnAttribute *getAttribute(int i)
 	{
 		return &this->attributes[i];
+	}
+
+	void setAttribute(int poz, ColumnAttribute&attributeNou)
+	{
+		cout << endl<<this->attributes[poz];
+		this->attributes[poz] = attributeNou;
+		cout<< endl << this->attributes[poz];
 	}
 
 	int getNoAttributes()
@@ -1732,7 +1758,70 @@ private:
 		}
 		else
 		{
-			//de facut dupa create
+			if (function.findChars(filterValue, function.NoCAPS) != 0 || function.findChars(filterValue, function.CAPS)!=0) //stergem ghilimelele din filtru ca sa putem compara (in tabel, stringurile apar fara gilimele)
+			{
+				filterValue.erase(0, 1);
+				filterValue.erase(filterValue.size() - 1, 1);
+			}
+
+			if (function.findChars(valueToChange, function.NoCAPS) != 0 || function.findChars(valueToChange, function.CAPS) != 0) //stergem ghilimelele din valoarea cu care vom face inlocuirea in tabel, daca e string
+			{
+				valueToChange.erase(0, 1);
+				valueToChange.erase(valueToChange.size() - 1, 1);
+			}
+
+			Table theTable;
+			string fileName = this->tableName + ".bin";
+			theTable.readTableFromBin(fileName);
+			int poz = 0; //pozitia la care gasim atributul filtru (daca ar fi sa ne imaginam un tabel cu n randuri, poz ar fi un nr intre 1 si n care reprezinta randul
+			//pe care apare atributul filtru)
+
+			//exemplu: UPDATE tournaments SET pointsreceived = 0 WHERE name = "JBL"
+
+			for (int i = 0; i < theTable.getNoColumns(); i++)//cautarea in toate coloanele tabelului
+			{
+				if ((*theTable.getColumn(i)).getName() == this->filter)//gasirea coloanei filtru (name)
+				{
+					for (int j = 0; j < (*theTable.getColumn(i)).getNoAttributes(); j++) //cautarea in toate atributele coloanei respective
+					{
+						if ((*(*theTable.getColumn(i)).getAttribute(j)).getValue() == filterValue) //gasirea atributului filtru (JBL)
+						{
+							poz = j;
+							break;
+						}
+					}
+				}
+			}
+
+			for (int i = 0; i < theTable.getNoColumns(); i++)
+			{
+				if ((*theTable.getColumn(i)).getName() == this->columnToChange)
+				{
+					ColumnAttribute newAttribute;
+					ColumnAttribute oldAttribute = (*(*theTable.getColumn(i)).getAttribute(poz));
+					if (oldAttribute.getType() == "INTEGER")
+					{
+						newAttribute.setAttributeInteger(this->valueToChange);
+					}
+					if (oldAttribute.getType() == "STRING")
+					{
+						newAttribute.setAttributeString(this->valueToChange);
+					}
+					if (oldAttribute.getType() == "FLOAT")
+					{
+						newAttribute.setAttributeFloat(this->valueToChange);
+					}
+
+					(*theTable.getColumn(i)).setAttribute(poz, newAttribute);
+				}
+			}
+
+			//acum atributul e schimbat in table. trebuie sa refacem fisierul binar cu noul tabel.
+			theTable.writeTableToBin(theTable.getName());
+
+
+			cout << endl << "CONGRATS! You have UPDATED the table";
+
 		}
 	}
 };
